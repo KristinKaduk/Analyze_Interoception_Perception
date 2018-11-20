@@ -526,7 +526,7 @@ for i_Folder = 1:length(Folder)
     for i_diff = 1:length(difficultyLevels)
         subplot(length(difficultyLevels),1,i_diff);
         for NrTrial =  DiffLevel(i_diff,:).ind
-            xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears);
+            xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears);
             yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
             plot(xTime, yPuDiameter);hold on;
             set(gca,'XTick', 0:1:8);set(gca,'xlim',[0 8]);
