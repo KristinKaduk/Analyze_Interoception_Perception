@@ -31,11 +31,13 @@ end
 %% prepare the data recorded in the variable as mat-file
 if preprocessing.CreateMatFiles
     % path_beh = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\Test_PupilCondition\Pilot1\';
-    path_beh = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\Test_PupilCondition\Data\passiveVsActive\';
+    path_beh = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\Test_PupilCondition\ActiveVsPassiv\';
     
-    
+            mkdir([path_beh,'matfiles'] )
+            mkdir([path_beh,'Graph'] )
+
     files = dir([path_beh ,'*.mat']);
-    for fileIndx = 1 :numel(files)
+    for fileIndx =  4 1 :numel(files)
         Data = load([path_beh, files(fileIndx).name]);
         succesfull_Trials = find([Data.trial.unsuccess]== 0);
         mkdir([path_beh, 'matfiles\',files(fileIndx).name(1:6)] )
@@ -200,12 +202,10 @@ end
 
 %% Preprocess the pupil-data for each trial
 %path = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\Test_PupilCondition\Pilot1\matfiles\';
-path = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\Test_PupilCondition\Data\passiveVsActive\matfiles\';
-
-
+path       = [path_beh,'\matfiles\'];
 Folder     = dir(path );
 Folder(1:2)=[];
-for i_Folder = 2 %:length(Folder)
+for i_Folder = 1 :length(Folder)
     folderName = [path ,Folder(i_Folder).name, '\'];
     rawFiles         = dir([folderName '*.mat']);
     Names = sort_nat({rawFiles.name});
@@ -259,10 +259,8 @@ for i_Folder = 2 %:length(Folder)
         %rawFiles(fileIndx).name(1:end-4),'_VelocityOfSamplingTime'],'-dpng','-r0') %dpng
     end
     %% Filter
-    customSettings.raw.dilationSpeedFilter_MadMultiplier = 16; 
-    customSettings.raw.dilationSpeedFilter_maxGap_ms = 200; 
-
-    [valOut,speedFiltData,devFiltData]  =rawDataFilter(hPupilData(11).timestamps_RawData_ms, hPupilData(11).leftPupil_RawData.rawSample,customSettings.raw);
+  
+   % [valOut,speedFiltData,devFiltData]  =rawDataFilter(hPupilData(11).timestamps_RawData_ms, hPupilData(11).leftPupil_RawData.rawSample,customSettings.raw);
     hPupilData.filterRawData();
     if preprocessing.GraphsPreprocessing
         %path_beh = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\Test_PupilCondition\Pilot1\';
@@ -331,38 +329,15 @@ for i_Folder = 2 %:length(Folder)
         end
     end
     
-    
-    if preprocessing.compare2Procedures
-        %% Tony's procedure
-        Data    = load([folderName, rawFiles(fileIndx).name]);
-        
-        %interval = getInterval(field_names,preprocessing.interval,trialData(j),preprocessing.eye);
-        center  = median(Data.diameter.L);
-        sdev    = nanstd(Data.diameter.L);
-        current_trial_filtered = normalization(Data.diameter.L,center, sdev);
-        velocity = vel(current_trial_filtered); %
-        
-        % exclude Data which exceed a slope of >0.1 or difference between median greater than 1
-        [indexBeginningSpikes, indexEndingSpikes] = findSpikes(velocity, fileIndx); %find Blinks defined they have a beginning and an ending
-        if numel(indexEndingSpikes) == numel(indexBeginningSpikes)
-            [current_trial_filtered_interpolated] = TakeBlinksModified(current_trial_filtered,indexBeginningSpikes, indexEndingSpikes,Data.diameter.t_ms);
-        end
-        %Graph compare poth procedure
-        p3 =figure(5);
-        plot((Data.diameter.t_ms/1000),current_trial.current_trial_norm_filt_cleaned, 'b.'); hold on;
-        plot((hPupilData.leftPupil_ValidSamples.signal.t),hPupilData.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap ,'r.')
-        print(p3,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Analyze\Pupil\Graph_Filtered\',...
-            rawFiles(fileIndx).name(1:end-4),'_Compare2Procedures'],'-dpng','-r0') %dpng
-    end
-    
+ 
     
     %%
-    
-    path_be = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\behavior\';
     files = dir([path_beh ,'*.mat']);
     Data = load([path_beh, files(i_Folder).name]);
     succesfull_Trials = find([Data.trial.unsuccess]== 0);
-    
+    if strcmp(files(i_Folder).name , 'KRPA01_2018-11-22_01.mat') 
+   succesfull_Trials(succesfull_Trials == 35) = []; 
+    end
     %% plot average timeCourse for the 5 difficulty levels
     % Which trials belong to which difficulty level?
     NrTrial = 0;
@@ -372,9 +347,11 @@ for i_Folder = 2 %:length(Folder)
         DaTab(NrTrial).NrTrial              = NrTrial; % how many completed trials..
         DaTab(NrTrial).Ind_CompletedTrials  = indtrial; %index of the trial in the group of all started trials
         DaTab(NrTrial).difficultyLevel      = abs([Data.trial(indtrial).refAngle_M2S] - [Data.trial(indtrial).refAngle_Sample] );
-        DaTab(NrTrial).Correct              = abs([Data.trial(indtrial).refAngle_M2S] - [Data.trial(indtrial).refAngle_Sample] );
-        DaTab(NrTrial).Incorrect            = abs([Data.trial(indtrial).refAngle_M2S] - [Data.trial(indtrial).refAngle_Sample] );
-        DaTab(NrTrial).PostCertaintyLevel   = abs([Data.trial(indtrial).refAngle_M2S] - [Data.trial(indtrial).refAngle_Sample] );
+        DaTab(NrTrial).Correct              = [Data.trial(indtrial).unsuccess] == 0 ;
+        DaTab(NrTrial).Incorrect            = [Data.trial(indtrial).unsuccess] == 1 ;
+        DaTab(NrTrial).PostCertaintyLevel   = [Data.trial(indtrial).wager_choosen_post]; 
+        DaTab(NrTrial).PreCertaintyLevel    = [Data.trial(indtrial).wager_choosen_pre];
+        DaTab(NrTrial).RatingsOrControl     = [Data.trial(indtrial).wagering_or_controll_wagering_post];
     end
     %Pupil Diameter.. Average all trials belonging to one difficulty level for each time point
     % Which time points are identical for each trial to be averaged?
@@ -384,7 +361,6 @@ for i_Folder = 2 %:length(Folder)
         % time for events is continous increasing from trial to trial
         DaTab(NrTrial).Time_pressed_rest_Fix1Base_run   = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
         DaTab(NrTrial).Trial_finish_time_run            = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Trial_finish_time_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
-        DaTab(NrTrial).Trial_finish_time_run_pupil      = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(end);
         DaTab(NrTrial).Time_sample_appeared_run         = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_appeared_run;
         DaTab(NrTrial).Time_sample_appeared_run_trial   = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_appeared_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
         
@@ -400,6 +376,142 @@ for i_Folder = 2 %:length(Folder)
         DaTab(NrTrial).SamplesBetweenSample_PercChoice_Selected_TimeLater  = DaTab(NrTrial).index_PercChoice_Selected_TimeLater - DaTab(NrTrial).index_SampleAppears ;
     end
     
+    %% FIND Trials which don't have signal
+     count = 1; Idx_NoSignal = NaN; 
+    for NrTrial =  1: length(hPupilData) %Nr. of completed trials
+        if length(hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter) < 2000 || nanstd(hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter)< 20
+        DaTab(NrTrial).difficultyLevel = NaN; 
+        DaTab(NrTrial).PostCertaintyLevel = NaN; 
+        DaTab(NrTrial).SamplesBetweenSample_PercChoice_Selected_TimeLater = [];
+        DaTab(NrTrial).SamplesBetweenRestM2S_EndTrial = [];
+        Idx_NoSignal(count) = NrTrial; 
+        printToConsole(2, ['  no pupil signal: delete the following trials: ', num2str(NrTrial)]);
+        count = count+1; 
+        end
+    end
+        %% plot the pupil dilation aligned to an event but complete signal 
+  BaselineCorrection = 'SingleTimePoint';
+    BaselineCorrection = 'Average';
+    for NrTrial = 1:length(hPupilData)
+       p2 = [];  p1 = [];  t2 = []; 
+
+        if ~ismember(Idx_NoSignal, NrTrial)
+        switch BaselineCorrection
+            case 'SingleTimePoint'
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
+                    -  t2;
+            case 'Average'
+                p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears -200);
+                p1 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
+
+                if p2 > p1
+                   Av =  mean(p1:p2); 
+                elseif p2 < p1 
+                    Av =  mean(p2:p1); 
+                else
+                    Av =  mean(p1:p2); 
+                    printToConsole(2, ['  p1 and p2 equal size ', num2str(NrTrial)]);
+                end
+                
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
+                    -  Av;
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
+                    -  t2;      
+        end
+        end
+    end
+    
+    % display EACH TRIAL
+    p6 =figure(8);
+    for NrTrial = 1:length(hPupilData)
+    xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff;
+    yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice ; 
+    plot(xTime, yPuDiameter);hold on;
+    end
+    title(rawFiles(fileIndx).name(1:4))   
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears'; text(typecast(double(0), 'double'),min(min(yPuDiameter)),txt1)
+    print(p6,[path_beh, 'Graph\',...
+    files(i_Folder).name(1:4), '_EachTrial'],'-dpng','-r0') %dpng
+    close all; 
+    
+    
+    %save for each participant
+    Individum{1,i_Folder} = hPupilData; 
+    %display AVERAGE
+    %initiave the vector
+    averagePupildiamter                 = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+    averagePupildiamter_Corrected       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+    Time                                = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+    Time_Baseline                       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+
+    %average the pupildiameter for each sample per difficulty level
+        counter = 0;
+        for i_Sample = 1: min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater])
+            Indiv(i_Folder,:).ind                                  = i_Folder;
+            Indiv(i_Folder,:).index_SampleAppears                  =  [DaTab(:).index_SampleAppears] ; 
+            Indiv(i_Folder,:).index_PercChoice_Selected_TimeLater  = [DaTab(:).index_PercChoice_Selected_TimeLater]; 
+            Indiv(i_Folder,:).indCounter                           = Indiv(i_Folder,:).index_SampleAppears + counter;
+            counter = counter +1;
+            % Sample Appears until Selection +4s
+            averagePupildiamter(i_Sample,1)      = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+            averagePupildiamter_Corrected(i_Sample,1)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+            Time(i_Sample,1)                            = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+            Time_Baseline(i_Sample,1)                   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+
+        end
+         Individum{2,i_Folder}.averagePupildiamter = averagePupildiamter(:); 
+         Individum{2,i_Folder}.averagePupildiamter_Corrected = averagePupildiamter_Corrected(:); 
+         Individum{2,i_Folder}.Time = Time(:); 
+         Individum{2,i_Folder}.Time_Baseline = Time_Baseline(:); 
+         Individum{2,i_Folder}.name = files(i_Folder).name(1:4);
+end
+
+     %%save
+     %% Plot Average
+    Plotcolor_D = [{'r.-' };{'b.-'};{'m.-' }; {'c.-' }]; %difficult to easy
+    p6 =figure(8);   
+   for i_Indiv =  1:size(Individum,2)
+        plot( Individum{2,i_Indiv}.Time_Baseline,  Individum{2,i_Indiv}.averagePupildiamter_Corrected , Plotcolor_D{i_Indiv}, 'MarkerSize',2)   ;
+        hold on; 
+        Name{i_Indiv} = Individum{2,i_Indiv}.name();
+         
+        legend(Name, 'FontSize',12);hold on
+        
+    end
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears'; text(typecast(double(0), 'double'),-200,txt1)
+    line([-1 -1], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'mask';text(typecast(double(1000), 'double'),-200,txt1)
+    line([-2 -2], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'Sample';text(typecast(double(2000), 'double'),-200,txt1)
+    
+    print(p6,[path_beh, 'Graph\Average_2Subjects_ActiveVsPassiv'],'-dpng','-r0') %dpng
+    
+    
+   % end
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
     %% plot  the pupil data with lines for important events
     if preprocessing.GraphsPreprocessing
         

@@ -16,6 +16,7 @@ preprocessing.compare2Procedures    = 0;
 preprocessing.analysis = 1;
 preprocessing.GraphsPreprocessing = 0;
 
+path_beh = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\behavior\'; 
 %%
 if preprocessing.AddPath
     % Add paths:
@@ -30,8 +31,8 @@ if preprocessing.AddPath
 end
 %% prepare the data recorded in the variable as mat-file
 if preprocessing.CreateMatFiles
-    path = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\behavior\';
-    files = dir([path ,'*.mat']);
+    path_beh = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\behavior\';
+    files = dir([path_beh ,'*.mat']);
     for fileIndx = 2 :numel(files)
         Data = load([path, files(fileIndx).name]);
         succesfull_Trials = find([Data.trial.unsuccess]== 0);
@@ -200,7 +201,7 @@ end
 path       = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\matfiles\';
 Folder     = dir(path );
 Folder(1:2)=[];
-for i_Folder = 1:length(Folder)
+for i_Folder = 3 1:length(Folder)
     folderName = [path ,Folder(i_Folder).name, '\'];
     rawFiles         = dir([folderName '*.mat']);
     Names = sort_nat({rawFiles.name});
@@ -321,37 +322,10 @@ for i_Folder = 1:length(Folder)
             close all;
         end
     end
-    
-    
-    if preprocessing.compare2Procedures
-        %% Tony's procedure
-        Data    = load([folderName, rawFiles(fileIndx).name]);
-        
-        %interval = getInterval(field_names,preprocessing.interval,trialData(j),preprocessing.eye);
-        center  = median(Data.diameter.L);
-        sdev    = nanstd(Data.diameter.L);
-        current_trial_filtered = normalization(Data.diameter.L,center, sdev);
-        velocity = vel(current_trial_filtered); %
-        
-        % exclude Data which exceed a slope of >0.1 or difference between median greater than 1
-        [indexBeginningSpikes, indexEndingSpikes] = findSpikes(velocity, fileIndx); %find Blinks defined they have a beginning and an ending
-        if numel(indexEndingSpikes) == numel(indexBeginningSpikes)
-            [current_trial_filtered_interpolated] = TakeBlinksModified(current_trial_filtered,indexBeginningSpikes, indexEndingSpikes,Data.diameter.t_ms);
-        end
-        %Graph compare poth procedure
-        p3 =figure(5);
-        plot((Data.diameter.t_ms/1000),current_trial.current_trial_norm_filt_cleaned, 'b.'); hold on;
-        plot((hPupilData.leftPupil_ValidSamples.signal.t),hPupilData.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap ,'r.')
-        print(p3,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Analyze\Pupil\Graph_Filtered\',...
-            rawFiles(fileIndx).name(1:end-4),'_Compare2Procedures'],'-dpng','-r0') %dpng
-    end
-    
-    
+     
     %%
-    
-    path_be = 'C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Data\behavior\';
-    files = dir([path_be ,'*.mat']);
-    Data = load([path_be, files(i_Folder).name]);
+    files = dir([path_beh ,'*.mat']);
+    Data = load([path_beh, files(i_Folder).name]);
     succesfull_Trials = find([Data.trial.unsuccess]== 0);
     
     %% plot average timeCourse for the 5 difficulty levels
@@ -381,33 +355,33 @@ for i_Folder = 1:length(Folder)
         DaTab(NrTrial).Time_sample_appeared_run         = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_appeared_run;
         DaTab(NrTrial).Time_sample_appeared_run_trial   = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_appeared_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
         DaTab(NrTrial).Wager_start_time_wagering_post_run   = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_start_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
-        DaTab(NrTrial).Wager_end_time_wagering_post_run   = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_end_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
-        DaTab(NrTrial).Time_pressed_rest_Fix3_MTS_run   = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix3_MTS_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
+        DaTab(NrTrial).Wager_end_time_wagering_post_run     = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_end_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
+        DaTab(NrTrial).Time_pressed_rest_Fix3_MTS_run       = Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix3_MTS_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run;
 
         index_SampleAppears = [];  index_SampleDisappears = []; index_PercChoiceAppears = []; %- Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Trial_start_time_run
         [c ,DaTab(NrTrial).index_TrialStart]          = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run)));
-        [c ,DaTab(NrTrial).index_SampleAppears]       = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_appeared_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run)));
-        [c ,DaTab(NrTrial).index_SampleDisappears]    = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_disappeared_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run )));
+        [c ,DaTab(NrTrial).index_SampleAppears]       = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_appeared_run       -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run)));
+        [c ,DaTab(NrTrial).index_SampleDisappears]    = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_sample_disappeared_run    -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run )));
         [c ,DaTab(NrTrial).index_PercChoiceAppears]   = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_matchtosample_appeared_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run)));
         [c ,DaTab(NrTrial).index_PercChoice_Selected] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_match_to_sample_selected_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run)));
         [c ,DaTab(NrTrial).index_PercChoice_Selected_TimeLater] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_match_to_sample_selected_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) +4)));
         
-        [c ,DaTab(NrTrial).index_Rest_M2S] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix3_MTS_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) )));
+        [c ,DaTab(NrTrial).index_StartRest_afterM2S] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix3_MTS_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) )));
 
         [c ,DaTab(NrTrial).index_PostCertaintyAppeared]    = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_start_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run))));
         [c ,DaTab(NrTrial).index_PostCertaintyDisappeared] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_end_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run))));
- 
-        [c ,DaTab(NrTrial).index_Rest_PostCert] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix4_Post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) )));
+        [c ,DaTab(NrTrial).index_PostCertainty_1streleasedButton] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_time_1streleasedButton_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run))));
 
+        [c ,DaTab(NrTrial).index_Rest_PostCert]       = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix4_Post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) )));
         [c ,DaTab(NrTrial).index_TrialEnd]            = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - (Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Trial_finish_time_run - Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run)));
         
         DaTab(NrTrial).SamplesBetweenSample_PercChoice_Selected_TimeLater  = DaTab(NrTrial).index_PercChoice_Selected_TimeLater - DaTab(NrTrial).index_SampleAppears ;
-        DaTab(NrTrial).SamplesBetweenRestM2S_EndTrial = DaTab(NrTrial).index_TrialEnd - DaTab(NrTrial).index_Rest_M2S ;
+        DaTab(NrTrial).SamplesBetweenRestM2S_EndTrial = DaTab(NrTrial).index_TrialEnd - DaTab(NrTrial).index_StartRest_afterM2S ;
 
     end
     
     %% plot  the pupil data with lines for important events
-  count = 1; 
+  count = 1;  Idx_NoSignal = NaN; 
     for NrTrial =  1: length(hPupilData) %Nr. of completed trials
         if length(hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter) < 2000 || nanstd(hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter)< 20
         DaTab(NrTrial).difficultyLevel = NaN; 
@@ -460,6 +434,88 @@ for i_Folder = 1:length(Folder)
     end
     
      %% Graph without Baseline Correction
+     
+     ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+
+   %% plot the pupil dilation aligned to an event but complete signal 
+    BaselineCorrection = 'SingleTimePoint';
+    BaselineCorrection = 'Average';
+    for NrTrial = 1:length(hPupilData)
+       p2 = [];  p1 = [];  t2 = []; 
+
+        if ~ismember(Idx_NoSignal, NrTrial)
+        switch BaselineCorrection
+            case 'SingleTimePoint'
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
+                    -  t2;
+            case 'Average'
+                p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears -200);
+                p1 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
+
+                if p2 > p1
+                   Av =  mean(p1:p2); 
+                elseif p2 < p1 
+                    Av =  mean(p2:p1); 
+                else
+                    Av =  mean(p1:p2); 
+                    printToConsole(2, ['  p1 and p2 equal size ', num2str(NrTrial)]);
+                end
+                
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
+                    -  Av;
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
+                    -  t2;      
+        end
+        end
+    end
+    
+    % display EACH TRIAL
+    p6 =figure(8);
+    for NrTrial = 1:length(hPupilData)
+    xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff;
+    yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice ; 
+    plot(xTime, yPuDiameter);hold on;
+    end
+    title(rawFiles(fileIndx).name(1:4))   
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears'; text(typecast(double(0), 'double'),min(min(yPuDiameter)),txt1)
+    print(p6,[path_beh, 'Graph\',...
+    files(i_Folder).name(1:4), '_EachTrial'],'-dpng','-r0') %dpng
+    close all; 
+    
+    
+    %save for each participant
+    Individum{1,i_Folder} = hPupilData; 
+    %display AVERAGE
+    %initiave the vector
+    averagePupildiamter                 = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+    averagePupildiamter_Corrected       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+    Time                                = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+    Time_Baseline                       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
+
+    %average the pupildiameter for each sample per difficulty level
+        counter = 0;
+        for i_Sample = 1: min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater])
+            Indiv(i_Folder,:).ind                                  = i_Folder;
+            Indiv(i_Folder,:).index_SampleAppears                  =  [DaTab(:).index_SampleAppears] ; 
+            Indiv(i_Folder,:).index_PercChoice_Selected_TimeLater  = [DaTab(:).index_PercChoice_Selected_TimeLater]; 
+            Indiv(i_Folder,:).indCounter                           = Indiv(i_Folder,:).index_SampleAppears + counter;
+            counter = counter +1;
+            % Sample Appears until Selection +4s
+            averagePupildiamter(i_Sample,1)      = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+            averagePupildiamter_Corrected(i_Sample,1)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+            Time(i_Sample,1)                            = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+            Time_Baseline(i_Sample,1)                   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(y), hPupilData,Indiv(i_Folder,:).indCounter'));
+
+        end
+         Individum{2,i_Folder}.averagePupildiamter = averagePupildiamter(:); 
+         Individum{2,i_Folder}.averagePupildiamter_Corrected = averagePupildiamter_Corrected(:); 
+         Individum{2,i_Folder}.Time = Time(:); 
+         Individum{2,i_Folder}.Time_Baseline = Time_Baseline(:); 
+         Individum{2,i_Folder}.name = files(i_Folder).name(1:4);
     %% BaselineCorrection - Difficulty Levels
    BaselineCorrection = 'SingleTimePoint';
     BaselineCorrection = 'Average';
@@ -469,22 +525,25 @@ for i_Folder = 1:length(Folder)
         if ~ismember(Idx_NoSignal, NrTrial)
         switch BaselineCorrection
             case 'SingleTimePoint'
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
+                    -  t2;
             case 'Average'
                 p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears -200);
                 p1 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
-                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PostCertaintyAppeared);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
 
                 if p2 > p1
                    Av =  mean(p1:p2); 
                 elseif p2 < p1 
-                    Av =  mean(p1:p2); 
+                    Av =  mean(p2:p1); 
                 else
                     Av =  mean(p1:p2); 
                     printToConsole(2, ['  p1 and p2 equal size ', num2str(NrTrial)]);
                 end
                 
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
                     -  Av;
                 hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
                     -  t2;      
@@ -514,47 +573,65 @@ for i_Folder = 1:length(Folder)
             counter = counter +1;
             % Sample Appears until Selection +4s
             averagePupildiamter(i_Sample,i)             = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y), hPupilData(DiffLevel(i,:).ind),DiffLevel(i,:).indCounter'));
-            averagePupildiamter_Corrected(i_Sample,i)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected(y), hPupilData(DiffLevel(i,:).ind),DiffLevel(i,:).indCounter'));
+            averagePupildiamter_Corrected(i_Sample,i)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff(y), hPupilData(DiffLevel(i,:).ind),DiffLevel(i,:).indCounter'));
             Time_Diff(i_Sample,i)                       = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(y), hPupilData(DiffLevel(i,:).ind),DiffLevel(i,:).indCounter'));
         end
     end
     
-    % subplots for each difficulty - showing each trial after
+    %% subplots for each difficulty - showing each trial after
     % baselineCorrection
-    p5 =figure(7);
-    
+    p5 =figure(5);
     for i_diff = 1:length(difficultyLevels)
         subplot(length(difficultyLevels),1,i_diff);
         for NrTrial =  DiffLevel(i_diff,:).ind
-            xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears);
-            yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+            xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears);
+            yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff(DaTab(NrTrial).index_SampleAppears:DaTab(NrTrial).index_PercChoice_Selected_TimeLater)-hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
             plot(xTime, yPuDiameter);hold on;
-            set(gca,'XTick', 0:1:8);set(gca,'xlim',[0 8]);
-        end
-        % plot( 1:length(averagePupildiamter_Corrected(:,i_diff)), averagePupildiamter_Corrected(:,i_diff) ,  'k.-', 'MarkerSize',2)   ; hold on;
-        
+        end        
     end
     print(p5,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
-        files(i_Folder).name(1:end-4), 'DifficultyLevels_EachTrial'],'-dpng','-r0') %dpng
-    % Plot average difficulty
-    Plotcolor_D = [{'r.-' };{'m.-'};{'b.-' }; {'c.-' }; {'g.-' }]; %difficult to easy
-    p6 =figure(8);
-    
+        files(i_Folder).name(1:end-4), 'DifficultyLevels_EachTrial2'],'-dpng','-r0') %dpng
+    %% Plot average difficulty
+    Plotcolor_D = [{'.' };{'.'};{'.' }; {'.' }; {'.' }]; %difficult to easy
+    Plotcolor_D2 = [[1,0,0] ;[0.7,0.4,0 ] ;[0.9,0.7,0.1];[0.5,0.7,0.2] ;[0, 0.5, 0 ]]; %difficult to easy
+
+    p6 =figure(6);
     for i_diff = 1:length(difficultyLevels)
-        plot( Time_Diff(:,i_diff), averagePupildiamter_Corrected(:,i_diff) , Plotcolor_D{i_diff}, 'MarkerSize',2,'DisplayName',num2str(difficultyLevels(i_diff)))   ;
+        plot(  Time_Diff(:,i_diff) , averagePupildiamter(:,i_diff) , Plotcolor_D{i_diff},'MarkerEdge',Plotcolor_D2(i_diff,:) , 'MarkerFace',Plotcolor_D2(i_diff,:) , 'MarkerSize',6,'DisplayName',num2str(difficultyLevels(i_diff)))   ;
         Diff{i_diff} = num2str(difficultyLevels(i_diff));
-        legend(Diff, 'FontSize',12);hold on
-        
+        legend(Diff, 'FontSize',12);hold on  
     end
     line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
-    txt1 = 'Sample'; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
-    line([1000 1000], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears '; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([-1 -1], get(gca,'YLim'),'Color','black','LineStyle','--');
     txt1 = 'mask';text(typecast(double(1000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
-    line([2000 2000], get(gca,'YLim'),'Color','black','LineStyle','--');
-    txt1 = '2nd Stimuli Appears';text(typecast(double(2000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
-    
+    line([-2 -2], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'Sample';text(typecast(double(2000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    % perceptual reaction time
     print(p6,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
-        files(i_Folder).name(1:end-4), 'DifficultyLevels_AverageBaselineCorrectBefore2ndStimuli'],'-dpng','-r0') %dpng
+        files(i_Folder).name(1:end-4), 'DifficultyLevels_AverageBaselineCorrectBefore2ndStimuli2'],'-dpng','-r0') %dpng
+    
+    
+    
+    
+    
+    p7 =figure(7);
+    for i_diff = 1:length(difficultyLevels)
+        plot(  Time_Diff(:,i_diff) , averagePupildiamter_Corrected(:,i_diff) , Plotcolor_D{i_diff},'MarkerEdge',Plotcolor_D2(i_diff,:) , 'MarkerFace',Plotcolor_D2(i_diff,:) , 'MarkerSize',6,'DisplayName',num2str(difficultyLevels(i_diff)))   ;
+        Diff{i_diff} = num2str(difficultyLevels(i_diff));
+        legend(Diff, 'FontSize',12);hold on  
+    end
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears '; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([-1 -1], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'mask';text(typecast(double(1000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([-2 -2], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'Sample';text(typecast(double(2000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    % perceptual reaction time
+    print(p7,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
+        files(i_Folder).name(1:end-4), 'DifficultyLevels_NoBaseline2'],'-dpng','-r0') %dpng
+  
+    
     close all;
    % end %all trials per subject
 
@@ -573,7 +650,10 @@ for i_Folder = 1:length(Folder)
 
         switch BaselineCorrection
             case 'SingleTimePoint'
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_PostCert   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_PostCert   = ...
+                    hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  ...
+                    hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PostCertaintyAppeared);
+                
                 t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PostCertaintyAppeared);
                 hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_PostCert   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
                     -  t2; 
@@ -582,14 +662,14 @@ for i_Folder = 1:length(Folder)
                 p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PostCertaintyAppeared);
                 t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PostCertaintyAppeared);
 
-                if p2 > p1
+              if p2 > p1
                    Av =  mean(p1:p2); 
                 elseif p2 < p1 
-                    Av =  mean(p1:p2); 
+                    Av =  mean(p2:p1); 
                 else
                     Av =  mean(p1:p2); 
                     printToConsole(2, ['  p1 and p2 equal size ', num2str(NrTrial)]);
-                end
+              end
                 hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_PostCert   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
                     -  Av;  
                 hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_PostCert   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
@@ -611,55 +691,62 @@ for i_Folder = 1:length(Folder)
         % starting from Rest_M2S as first Sample, average all sample
         for i_Sample = 1: min([DaTab.SamplesBetweenRestM2S_EndTrial])
             Certainty(i,:).indPost                                  = find([DaTab.PostCertaintyLevel] == PostCertaintyLevels(i));
-            Certainty(i,:).index_Rest_M2S                           = arrayfun(@(x)x.index_Rest_M2S, DaTab(Certainty(i,:).indPost));
+            Certainty(i,:).index_StartRest_afterM2S                           = arrayfun(@(x)x.index_StartRest_afterM2S, DaTab(Certainty(i,:).indPost));
             Certainty(i,:).index_TrialEnd                           = arrayfun(@(x)x.index_TrialEnd, DaTab(Certainty(i,:).indPost ));
-            Certainty(i,:).indCounter                               = Certainty(i,:).index_Rest_M2S + counter; %changes with each Sample
+            Certainty(i,:).indCounter                               = Certainty(i,:).index_StartRest_afterM2S + counter; %changes with each Sample
             counter = counter +1;
             % Sample Appears until Selection +4s
             averagePupildiamter(i_Sample,i)                     = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y),                            hPupilData(Certainty(i,:).indPost),Certainty(i,:).indCounter'));
             averagePupildiamter_Corrected_PostCer(i_Sample,i)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_PostCert(y),  hPupilData(Certainty(i,:).indPost),Certainty(i,:).indCounter'));
-            Time_PostCert(i_Sample,i)                                    = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_PostCert(y),                                                     hPupilData(Certainty(i,:).indPost),Certainty(i,:).indCounter'));
+            Time_PostCert(i_Sample,i)                           = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_PostCert(y),                           hPupilData(Certainty(i,:).indPost),Certainty(i,:).indCounter'));
+            Time(i_Sample,1)                   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t(y)                                                            , hPupilData(Certainty(i,:).indPost),Certainty(i,:).indCounter'));
         end
     end
-   % subplots for each difficulty - showing each trial
-    p7 =figure(9);
-    
+   %% subplots for each certainty level - showing each trial
+    p5 =figure(5);
     for i_cert = 1:length(PostCertaintyLevels)
         subplot(length(PostCertaintyLevels),1,i_cert);
         for NrTrial =  Certainty(i_cert,:).indPost
-            xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_PostCert(DaTab(NrTrial).index_Rest_M2S:DaTab(NrTrial).index_TrialEnd)        -       hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_Rest_M2S);
-            yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_PostCert(DaTab(NrTrial).index_Rest_M2S:DaTab(NrTrial).index_TrialEnd)       -       hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PostCertaintyAppeared);
+            xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_PostCert(DaTab(NrTrial).index_StartRest_afterM2S:DaTab(NrTrial).index_TrialEnd)        -       hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_StartRest_afterM2S);
+            yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_PostCert(DaTab(NrTrial).index_StartRest_afterM2S:DaTab(NrTrial).index_TrialEnd)       -       hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PostCertaintyAppeared);
             plot(xTime, yPuDiameter);hold on;
             
-        end
-        % plot( 1:length(averagePupildiamter_Corrected(:,i_diff)), averagePupildiamter_Corrected(:,i_diff) ,  'k.-', 'MarkerSize',2)   ; hold on;
-        
+        end        
     end
-    print(p7,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_PostCertainty\',...
+    print(p5,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_PostCertainty\',...
         files(i_Folder).name(1:end-4), 'PostCertainty_EachTrial'],'-dpng','-r0') %dpng
-    % Plot average difficulty
-    Plotcolor_D = [{'g.-' };{'m.-'};{'r.-' }; {'c.-' }; {'b.-' }; {'k'}]; %difficult to easy
-    p6 =figure(8);
-    
+    %% Plot average Certainty Levels
+    Plotcolor_D = [{'.' };{'.'};{'.' }; {'.' }; {'.' }; {'.'}]; %difficult to easy
+    Plotcolor_D2 = [[1,0,0.4] ;[0.7,0,1];[0.5,0.2,0.5] ;[0,0,1];[0,0.4,0.7] ;[0,1,1]]; %difficult to easy
 
+    p6 =figure(6);
     for i_Postcert = 1:length(PostCertaintyLevels)
-        plot(  Time(:,i_Postcert) , averagePupildiamter_Corrected_PostCer(:,i_Postcert) , Plotcolor_D{i_Postcert}, 'MarkerSize',2,'DisplayName',num2str(PostCertaintyLevels(i_Postcert)))   ;
-        Indx = find(round(Time(:,i_Postcert),3) == 0); 
-        plot( Time(Indx,i_Postcert) , averagePupildiamter_Corrected_PostCer(Indx,i_Postcert), 'ro')        
+        plot(  Time_PostCert(:,i_Postcert) , averagePupildiamter(:,i_Postcert) , Plotcolor_D{i_Postcert},'MarkerEdge',Plotcolor_D2(i_Postcert,:) , 'MarkerFace',Plotcolor_D2(i_Postcert,:) , 'MarkerSize',6,'DisplayName',num2str(PostCertaintyLevels(i_Postcert)))   ;
+       % Indx = find(round(Time_PostCert(:,i_Postcert),3) == 0); 
+       % plot( Time_PostCert(Indx,i_Postcert) , averagePupildiamter_Corrected_PostCer(Indx,i_Postcert), 'ro')        
         %plot( 1:length(averagePupildiamter(:,i_Postcert)), averagePupildiamter_Corrected_PostCer(:,i_Postcert) , Plotcolor_D{i_Postcert}, 'MarkerSize',2,'DisplayName',num2str(PostCertaintyLevels(i_Postcert)))   ;
         PostCert{i_Postcert} = num2str(PostCertaintyLevels(i_Postcert));
         legend(PostCert, 'FontSize',12);hold on   
     end
     line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
-    txt1 = 'PostCert appears'; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected_PostCer)),txt1)
-   
-    line([1000 1000], get(gca,'YLim'),'Color','black','LineStyle','--');
-    txt1 = 'mask';text(typecast(double(1000), 'double'),min(min(averagePupildiamter_Corrected_PostCer)),txt1)
-    line([2000 2000], get(gca,'YLim'),'Color','black','LineStyle','--');
-    txt1 = '2nd Stimuli Appears';text(typecast(double(2000), 'double'),min(min(averagePupildiamter_Corrected_PostCer)),txt1)
-    
+    txt1 = 'PostCert appears'; text(typecast(double(0), 'double'),min(min(averagePupildiamter)),txt1)
+
     print(p6,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_PostCertainty\',...
+        files(i_Folder).name(1:end-4), 'PostCertainty_NoBaseline'],'-dpng','-r0') %dpng
+    
+    
+     p7 =figure(7);
+    for i_Postcert = 1:length(PostCertaintyLevels)
+        plot(  Time_PostCert(:,i_Postcert) , averagePupildiamter_Corrected_PostCer(:,i_Postcert) , Plotcolor_D{i_Postcert},'MarkerEdge',Plotcolor_D2(i_Postcert,:) , 'MarkerFace',Plotcolor_D2(i_Postcert,:) , 'MarkerSize',6,'DisplayName',num2str(PostCertaintyLevels(i_Postcert)))   ;
+        PostCert{i_Postcert} = num2str(PostCertaintyLevels(i_Postcert));
+        legend(PostCert, 'FontSize',12);hold on   
+    end
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'PostCert appears'; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected_PostCer)),txt1)
+
+    print(p7,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_PostCertainty\',...
         files(i_Folder).name(1:end-4), 'PostCertainty_AverageBaselineBeforePostCerRatingAppeared'],'-dpng','-r0') %dpng
+   
     close all;
    % end %all trials per subject  
 end % loop through participants
