@@ -367,6 +367,7 @@ for i_Folder = 3 1:length(Folder)
         [c ,DaTab(NrTrial).index_PercChoice_Selected_TimeLater] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_match_to_sample_selected_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) +4)));
         
         [c ,DaTab(NrTrial).index_StartRest_afterM2S] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix3_MTS_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) )));
+        [c ,DaTab(NrTrial).index_pressed_rest_Fix2_Pre] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix2_Pre_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run) )));
 
         [c ,DaTab(NrTrial).index_PostCertaintyAppeared]    = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_start_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run))));
         [c ,DaTab(NrTrial).index_PostCertaintyDisappeared] = min(abs(hPupilData(NrTrial).leftPupil_ValidSamples.signal.t - ((Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Wager_end_time_wagering_post_run -Data.trial(DaTab(NrTrial).Ind_CompletedTrials).Time_pressed_rest_Fix1Base_run))));
@@ -377,6 +378,8 @@ for i_Folder = 3 1:length(Folder)
         
         DaTab(NrTrial).SamplesBetweenSample_PercChoice_Selected_TimeLater  = DaTab(NrTrial).index_PercChoice_Selected_TimeLater - DaTab(NrTrial).index_SampleAppears ;
         DaTab(NrTrial).SamplesBetweenRestM2S_EndTrial = DaTab(NrTrial).index_TrialEnd - DaTab(NrTrial).index_StartRest_afterM2S ;
+        DaTab(NrTrial).Start_EndTrial = DaTab(NrTrial).index_TrialEnd - DaTab(NrTrial).index_TrialStart ;
+        DaTab(NrTrial).SamplesBetweenSample_PercChoiceSelected_TimeLater = DaTab(NrTrial).index_PercChoice_Selected_TimeLater - DaTab(NrTrial).index_pressed_rest_Fix2_Pre ;
 
     end
     
@@ -433,89 +436,7 @@ for i_Folder = 3 1:length(Folder)
         end
     end
     
-     %% Graph without Baseline Correction
-     
-     ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
-
-   %% plot the pupil dilation aligned to an event but complete signal 
-    BaselineCorrection = 'SingleTimePoint';
-    BaselineCorrection = 'Average';
-    for NrTrial = 1:length(hPupilData)
-       p2 = [];  p1 = [];  t2 = []; 
-
-        if ~ismember(Idx_NoSignal, NrTrial)
-        switch BaselineCorrection
-            case 'SingleTimePoint'
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap   -  hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
-                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
-                    -  t2;
-            case 'Average'
-                p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears -200);
-                p1 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
-                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
-
-                if p2 > p1
-                   Av =  mean(p1:p2); 
-                elseif p2 < p1 
-                    Av =  mean(p2:p1); 
-                else
-                    Av =  mean(p1:p2); 
-                    printToConsole(2, ['  p1 and p2 equal size ', num2str(NrTrial)]);
-                end
-                
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
-                    -  Av;
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
-                    -  t2;      
-        end
-        end
-    end
     
-    % display EACH TRIAL
-    p6 =figure(8);
-    for NrTrial = 1:length(hPupilData)
-    xTime = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff;
-    yPuDiameter = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice ; 
-    plot(xTime, yPuDiameter);hold on;
-    end
-    title(rawFiles(fileIndx).name(1:4))   
-    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
-    txt1 = '2nd Stimuli Appears'; text(typecast(double(0), 'double'),min(min(yPuDiameter)),txt1)
-    print(p6,[path_beh, 'Graph\',...
-    files(i_Folder).name(1:4), '_EachTrial'],'-dpng','-r0') %dpng
-    close all; 
-    
-    
-    %save for each participant
-    Individum{1,i_Folder} = hPupilData; 
-    %display AVERAGE
-    %initiave the vector
-    averagePupildiamter                 = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
-    averagePupildiamter_Corrected       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
-    Time                                = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
-    Time_Baseline                       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),1);
-
-    %average the pupildiameter for each sample per difficulty level
-        counter = 0;
-        for i_Sample = 1: min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater])
-            Indiv(i_Folder,:).ind                                  = i_Folder;
-            Indiv(i_Folder,:).index_SampleAppears                  =  [DaTab(:).index_SampleAppears] ; 
-            Indiv(i_Folder,:).index_PercChoice_Selected_TimeLater  = [DaTab(:).index_PercChoice_Selected_TimeLater]; 
-            Indiv(i_Folder,:).indCounter                           = Indiv(i_Folder,:).index_SampleAppears + counter;
-            counter = counter +1;
-            % Sample Appears until Selection +4s
-            averagePupildiamter(i_Sample,1)      = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y), hPupilData,Indiv(i_Folder,:).indCounter'));
-            averagePupildiamter_Corrected(i_Sample,1)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_BaselineCorected_PerChoice(y), hPupilData,Indiv(i_Folder,:).indCounter'));
-            Time(i_Sample,1)                            = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t(y), hPupilData,Indiv(i_Folder,:).indCounter'));
-            Time_Baseline(i_Sample,1)                   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(y), hPupilData,Indiv(i_Folder,:).indCounter'));
-
-        end
-         Individum{2,i_Folder}.averagePupildiamter = averagePupildiamter(:); 
-         Individum{2,i_Folder}.averagePupildiamter_Corrected = averagePupildiamter_Corrected(:); 
-         Individum{2,i_Folder}.Time = Time(:); 
-         Individum{2,i_Folder}.Time_Baseline = Time_Baseline(:); 
-         Individum{2,i_Folder}.name = files(i_Folder).name(1:4);
     %% BaselineCorrection - Difficulty Levels
    BaselineCorrection = 'SingleTimePoint';
     BaselineCorrection = 'Average';
@@ -530,9 +451,9 @@ for i_Folder = 3 1:length(Folder)
                 hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
                     -  t2;
             case 'Average'
-                p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears +200);
-                p1 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_PercChoiceAppears);
-                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_PercChoiceAppears);
+                p2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_SampleAppears -200);
+                p1 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(DaTab(NrTrial).index_SampleAppears);
+                t2 = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t(DaTab(NrTrial).index_SampleAppears);
 
                 if p2 > p1
                    Av =  mean(p1:p2); 
@@ -543,8 +464,8 @@ for i_Folder = 3 1:length(Folder)
                     printToConsole(2, ['  p1 and p2 equal size ', num2str(NrTrial)]);
                 end
                 
-                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
-                    -  Av;
+                hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff   = (hPupilData(NrTrial).leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap  ...
+                    -  Av )/Av;
                 hPupilData(NrTrial).leftPupil_ValidSamples.signal.t_Baselinecorected_Diff   = hPupilData(NrTrial).leftPupil_ValidSamples.signal.t  ...
                     -  t2;      
         end
@@ -554,9 +475,11 @@ for i_Folder = 3 1:length(Folder)
     % Prepare the plots for each Difficulty Level
     difficultyLevels                            = unique([DaTab.difficultyLevel]);
     difficultyLevels(isnan(difficultyLevels))   =[]; 
-    %initiave the vector
-    averagePupildiamter                 = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),length(difficultyLevels));
-    averagePupildiamter_Corrected       = NaN( min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]),length(difficultyLevels));
+    %initiave the vector %SamplesBetweenSample_PercChoiceSelected_TimeLater
+    %%SamplesBetweenSample_PercChoice_Selected_TimeLater
+    averagePupildiamter                 = NaN( min([DaTab.SamplesBetweenSample_PercChoiceSelected_TimeLater]),length(difficultyLevels));
+    averagePupildiamter_Corrected       = NaN( min([DaTab.SamplesBetweenSample_PercChoiceSelected_TimeLater]),length(difficultyLevels));
+    Time_Diff                           = NaN( min([DaTab.SamplesBetweenSample_PercChoiceSelected_TimeLater]),length(difficultyLevels));
     %average the pupildiameter for each sample per difficulty level
     DiffLevel = []; 
 
@@ -565,11 +488,11 @@ for i_Folder = 3 1:length(Folder)
 %         if min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]) == 0
 %            idx =  find([DaTab(:).SamplesBetweenSample_PercChoice_Selected_TimeLater] == 0)
 %         end
-        for i_Sample = 1: min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater])
+        for i_Sample = 1: min([DaTab.SamplesBetweenSample_PercChoiceSelected_TimeLater])
             DiffLevel(i,:).ind                                  = find([DaTab.difficultyLevel] == difficultyLevels(i));
-            DiffLevel(i,:).index_SampleAppears                  = arrayfun(@(x)x.index_SampleAppears, DaTab(DiffLevel(i,:).ind));
+            DiffLevel(i,:).index_pressed_rest_Fix2_Pre                  = arrayfun(@(x)x.index_pressed_rest_Fix2_Pre, DaTab(DiffLevel(i,:).ind));
             DiffLevel(i,:).index_PercChoice_Selected_TimeLater  = arrayfun(@(x)x.index_PercChoice_Selected_TimeLater, DaTab(DiffLevel(i,:).ind ));
-            DiffLevel(i,:).indCounter                           = DiffLevel(i,:).index_SampleAppears +counter; %
+            DiffLevel(i,:).indCounter                           = DiffLevel(i,:).index_pressed_rest_Fix2_Pre +counter; %
             counter = counter +1;
             % Sample Appears until Selection +4s
             averagePupildiamter(i_Sample,i)             = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y), hPupilData(DiffLevel(i,:).ind),DiffLevel(i,:).indCounter'));
@@ -589,6 +512,8 @@ for i_Folder = 3 1:length(Folder)
             plot(xTime, yPuDiameter);hold on;
         end        
     end
+   ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+
     print(p5,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
         files(i_Folder).name(1:end-4), 'DifficultyLevels_EachTrial2'],'-dpng','-r0') %dpng
     %% Plot average difficulty
@@ -601,6 +526,9 @@ for i_Folder = 3 1:length(Folder)
         Diff{i_diff} = num2str(difficultyLevels(i_diff));
         legend(Diff, 'FontSize',12);hold on  
     end
+       ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+       xlabel('Time from stimulus onset','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+
     line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
     txt1 = '2nd Stimuli Appears '; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
     line([-1 -1], get(gca,'YLim'),'Color','black','LineStyle','--');
@@ -621,6 +549,88 @@ for i_Folder = 3 1:length(Folder)
         Diff{i_diff} = num2str(difficultyLevels(i_diff));
         legend(Diff, 'FontSize',12);hold on  
     end
+ ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+       xlabel('Time from stimulus onset','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'Sample'; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([1 1], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'mask';text(typecast(double(1), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([2 2], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears';text(typecast(double(2), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    % perceptual reaction time
+    print(p7,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
+        files(i_Folder).name(1:end-4), 'DifficultyLevels_NoBaseline2'],'-dpng','-r0') %dpng
+  
+    
+    close all;
+   % end %all trials per subject
+%% Difficulty Level - show the complete TRIAL
+  % Prepare the plots for each Difficulty Level
+    difficultyLevels                            = unique([DaTab.difficultyLevel]);
+    difficultyLevels(isnan(difficultyLevels))   =[]; 
+    %initiave the vector
+    averagePupildiamter                 = NaN( min([DaTab.Start_EndTrial]),length(difficultyLevels));
+    averagePupildiamter_Corrected       = NaN( min([DaTab.Start_EndTrial]),length(difficultyLevels));
+    Time_Diff                           = NaN( min([DaTab.Start_EndTrial]),length(difficultyLevels));
+
+    %average the pupildiameter for each sample per difficulty level
+    DiffLevel_complTrial = []; 
+
+    for i = 1:length(difficultyLevels)
+        counter = 0;
+%         if min([DaTab.SamplesBetweenSample_PercChoice_Selected_TimeLater]) == 0
+%            idx =  find([DaTab(:).SamplesBetweenSample_PercChoice_Selected_TimeLater] == 0)
+%         end
+        for i_Sample = 1: min([DaTab.Start_EndTrial])
+            DiffLevel_complTrial(i,:).ind                                  = find([DaTab.difficultyLevel] == difficultyLevels(i));
+            DiffLevel_complTrial(i,:).index_TrialStart                 = arrayfun(@(x)x.index_TrialStart, DaTab(DiffLevel_complTrial(i,:).ind));
+            DiffLevel_complTrial(i,:).index_TrialEnd  = arrayfun(@(x)x.index_TrialEnd, DaTab(DiffLevel_complTrial(i,:).ind ));
+            DiffLevel_complTrial(i,:).indCounter                           = DiffLevel_complTrial(i,:).index_TrialStart +counter; %
+            counter = counter +1;
+            % Sample Appears until Selection +4s
+            averagePupildiamter(i_Sample,i)             = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap(y), hPupilData(DiffLevel_complTrial(i,:).ind),DiffLevel_complTrial(i,:).indCounter'));
+            averagePupildiamter_Corrected(i_Sample,i)   = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.pupilDiameter_NoRemovedGap_Baselinecorected_Diff(y), hPupilData(DiffLevel_complTrial(i,:).ind),DiffLevel_complTrial(i,:).indCounter'));
+            Time_Diff(i_Sample,i)                       = nanmean(arrayfun(@(x,y) x.leftPupil_ValidSamples.signal.t_Baselinecorected_Diff(y), hPupilData(DiffLevel_complTrial(i,:).ind),DiffLevel_complTrial(i,:).indCounter'));
+        end
+    end
+    
+   %% Plot average difficulty for the complete trial
+    Plotcolor_D = [{'.' };{'.'};{'.' }; {'.' }; {'.' }]; %difficult to easy
+    Plotcolor_D2 = [[1,0,0] ;[0.7,0.4,0 ] ;[0.9,0.7,0.1];[0.5,0.7,0.2] ;[0, 0.5, 0 ]]; %difficult to easy
+
+    p6 =figure(6);
+    for i_diff = 1:length(difficultyLevels)
+        plot(  Time_Diff(:,i_diff) , averagePupildiamter(:,i_diff) , Plotcolor_D{i_diff},'MarkerEdge',Plotcolor_D2(i_diff,:) , 'MarkerFace',Plotcolor_D2(i_diff,:) , 'MarkerSize',6,'DisplayName',num2str(difficultyLevels(i_diff)))   ;
+        Diff{i_diff} = num2str(difficultyLevels(i_diff));
+        legend(Diff, 'FontSize',12);hold on  
+    end
+       ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+       xlabel('Time from stimulus onset','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+
+    line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = '2nd Stimuli Appears '; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([-1 -1], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'mask';text(typecast(double(1000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    line([-2 -2], get(gca,'YLim'),'Color','black','LineStyle','--');
+    txt1 = 'Sample';text(typecast(double(2000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
+    % perceptual reaction time
+    print(p6,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
+        files(i_Folder).name(1:end-4), 'DifficultyLevels_NotbaselineCorrected2ndStimuli_CompleteTrial'],'-dpng','-r0') %dpng
+    
+    
+    
+    
+    
+    p7 =figure(7);
+    for i_diff = 1:length(difficultyLevels)
+        plot(  Time_Diff(:,i_diff) , averagePupildiamter_Corrected(:,i_diff) , Plotcolor_D{i_diff},'MarkerEdge',Plotcolor_D2(i_diff,:) , 'MarkerFace',Plotcolor_D2(i_diff,:) , 'MarkerSize',6,'DisplayName',num2str(difficultyLevels(i_diff)))   ;
+        Diff{i_diff} = num2str(difficultyLevels(i_diff));
+        legend(Diff, 'FontSize',12);hold on  
+    end
+ ylabel('Relative pupil diameter','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+       xlabel('Time from stimulus onset','fontsize',WritingLabelAxis_Size,'fontweight','b' );
+
     line([0 0], get(gca,'YLim'),'Color','black','LineStyle','--');
     txt1 = '2nd Stimuli Appears '; text(typecast(double(0), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
     line([-1 -1], get(gca,'YLim'),'Color','black','LineStyle','--');
@@ -629,14 +639,10 @@ for i_Folder = 3 1:length(Folder)
     txt1 = 'Sample';text(typecast(double(2000), 'double'),min(min(averagePupildiamter_Corrected)),txt1)
     % perceptual reaction time
     print(p7,['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\Pupil\Graph\Graph_DifficultyLevels\',...
-        files(i_Folder).name(1:end-4), 'DifficultyLevels_NoBaseline2'],'-dpng','-r0') %dpng
+        files(i_Folder).name(1:end-4), 'DifficultyLevels_baselineCorrected2ndStimuli_CompleteTrial'],'-dpng','-r0') %dpng
   
     
-    close all;
-   % end %all trials per subject
-
-
-   
+    close all; 
    
    
    
