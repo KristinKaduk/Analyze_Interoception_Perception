@@ -13,7 +13,7 @@ Plotcolor_LinedDots = [{'g.--' };{'m.--'};{'b.--' }; {'c.--' };{'r.--' }; {'k.--
 
 Plotcolor_Star = [{'g*' };{'m*'};{'b*' }; {'c*' }; {'r*' }; {'k*' }];
 
-for file_index=  1 : numel(subfolder_content)
+for file_index= 4 1 : numel(subfolder_content)
     %intiate Variables
 load([pathname filesep subfolder_content{file_index}]);
 unsuccess             =[trial.unsuccess];
@@ -147,8 +147,8 @@ for i = 1: length(Cer)
     PostCertain.NrTrial(i)      = sum(CompletedTrials == Cer(i)); 
     PostCertain.NrTrials_Suc(i)      = sum(success(find(CompletedTrials == Cer(i))) == 1) ; 
     PostCertain.NrTrials_Unsuc(i)    = sum(success(find(CompletedTrials == Cer(i))) == 0) ; 
-    PostCertain.Performance(i)  = PostCertain.NrTrials_Suc(i)/ (PostCertain.NrTrials_Suc(i) +PostCertain.NrTrials_Unsuc(i)) ; 
-    PostCertain.GeneralPerformance = sum(PostCertain.NrTrials_Suc) /  sum(PostCertain.NrTrial);
+    PostCertain.Performance(i)       = PostCertain.NrTrials_Suc(i)/ (PostCertain.NrTrials_Suc(i) +PostCertain.NrTrials_Unsuc(i)) ; 
+    PostCertain.GeneralPerformance   = sum(PostCertain.NrTrials_Suc) /  sum(PostCertain.NrTrial);
 
 end
 
