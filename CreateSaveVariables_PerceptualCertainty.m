@@ -1,0 +1,288 @@
+clear all; close all; 
+c = 1; Subject = {}; 
+pathname = 'Y:\Projects\Interoception\Perceptual_Certainty\Data\behavior'; 
+cd('C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Analyze')
+
+subfolder_dir=dir([pathname filesep  '*.mat']); % checking only for mat files in the specified subfolder
+subfolder_content={subfolder_dir.name};
+subfolder_content=sort(subfolder_content);
+
+
+
+
+for file_index=   1 : numel(subfolder_content)
+    %intiate Variables
+load([pathname filesep subfolder_content{file_index}]);
+unsuccess              =[trial.unsuccess];
+refAngle_Sample        =[trial.refAngle_Sample];
+refAngle_M2S           =[trial.refAngle_M2S];
+Stimuli_LeftOrRight    =[trial.Stimuli_LeftOrRight];
+selected_Right         =[trial.selected_Right]; %selected coded as 1
+selected_Left          =[trial.selected_Left]; %%selected coded as 1
+Time_matchtosample_appeared_run                     = [trial.Time_matchtosample_appeared_run];
+Time_match_to_sample_button_released_run            = [trial.Time_match_to_sample_button_released_run];
+Time_match_to_sample_selected_1stPress_run          = [trial.Time_match_to_sample_selected_1stPress_run];
+Time_match_to_sample_selected_run                   = [trial.Time_match_to_sample_selected_run];
+Time_match_to_sample_ReactionTime = Time_match_to_sample_button_released_run - Time_matchtosample_appeared_run;
+Time_match_to_sample_MovementTime = Time_match_to_sample_selected_run - Time_matchtosample_appeared_run;
+position_wager_chosen_pre   =[trial.position_wager_chosen_pre];
+position_wager_chosen_post  =[trial.position_wager_chosen_post];
+wager_choosen_pre           =[trial.wager_choosen_pre];
+wager_choosen_post          =[trial.wager_choosen_post];
+wagering_or_controll_wagering_post   =[trial.wagering_or_controll_wagering_post]; %postwagering =2
+wagering_or_controll_wagering_pre    =[trial.wagering_or_controll_wagering_pre];%
+
+n_wagers        =SETTINGS.NrOfWagers;
+n_trials        =SETTINGS.n_trials;
+control_post    =[trial.wagering_or_controll_wagering_post];
+control_pre     =[trial.wagering_or_controll_wagering_pre];
+selected_Right  =[trial.selected_Right];
+Stimuli_LeftOrRight     =[trial.Stimuli_LeftOrRight];
+selected_Left           =[trial.selected_Left];
+wager_choosen_post      =[trial.wager_choosen_post];
+wager_choosen_pre       =[trial.wager_choosen_pre];
+correctSelection_M2S    =[trial.correctSelection_M2S];
+
+success = zeros(1,length(Time_match_to_sample_MovementTime)); 
+success((Stimuli_LeftOrRight == 2 & selected_Right == 1 | Stimuli_LeftOrRight == 1 & selected_Left == 1)) = 1; 
+% nansum(success)/length(success);
+%ANHA30_01_02_2018-06-18.mat , in total: 311 trials, 102 trials with
+%fixation break etc mistakes; 83 successful; in total: 40% success rate
+diff = abs(refAngle_M2S - refAngle_Sample ); 
+
+%% General Performace
+completedTrials_success = success; 
+completedTrials_success(unsuccess ~= 0) = NaN;
+completedTrials_unsuccess = unsuccess; 
+completedTrials_unsuccess(unsuccess ~= 0) = NaN;
+CompletedTrials_postwagering = wager_choosen_post; 
+CompletedTrials_postwagering(unsuccess ~= 0) = NaN;
+CompletedTrials_postwagering(wagering_or_controll_wagering_post == 1) = NaN; %delete all Pre-Wagering
+
+%unsuccess(unsuccess ~= 0) = [];
+General(file_index).Subject      = subfolder_content{file_index}(1:6);  %HARD CODED!!!
+General(file_index).NrTrial      = nansum(completedTrials_unsuccess == 0); 
+General(file_index).Success      = nansum(completedTrials_success== 1) ; 
+General(file_index).Unsuccess    = nansum(completedTrials_success == 0) ; 
+General(file_index).Performance  = General(file_index).Success / (General(file_index).Success +General(file_index).Unsuccess) ;
+General(file_index).AverageCertainty  = round(nansum(CompletedTrials_postwagering)/sum(~isnan(CompletedTrials_postwagering)),2) ;
+
+
+
+%% Difficulty Level
+% How many trials per difficulty? Performance per Difficulty? 
+Diff_completedTrials = diff;
+Diff_completedTrials(unsuccess ~= 0) = NaN;
+y = unique(Diff_completedTrials(unsuccess == 0));
+for i = 1: length(y)
+    Diff(file_index).Subject         = subfolder_content{file_index}(1:6);  %HARD CODED!!!
+    Diff(file_index).DiffLevels(i)   = y(i); 
+    Diff(file_index).NrTrial(i)      = nansum(Diff_completedTrials == y(i)); 
+    Diff(file_index).Success(i)      = nansum(success(find(Diff_completedTrials == y(i))) == 1) ; 
+    Diff(file_index).Unsuccess(i)    = nansum(success(find(Diff_completedTrials == y(i))) == 0) ; 
+    Diff(file_index).Performance(i)  = Diff(file_index).Success(i)/ (Diff(file_index).Success(i) +Diff(file_index).Unsuccess(i)) ; 
+    Diff(file_index).RT_mean(i)      = nanmean(Time_match_to_sample_ReactionTime(find(Diff_completedTrials == y(i)))); 
+    Diff(file_index).RT_sd(i)        = nanstd(Time_match_to_sample_ReactionTime(find(Diff_completedTrials == y(i))));     
+    Diff(file_index).MVT_mean(i)     = nanmean(Time_match_to_sample_MovementTime(find(Diff_completedTrials == y(i)))); 
+    Diff(file_index).MVT_sd(i)       = nanstd(Time_match_to_sample_MovementTime(find(Diff_completedTrials == y(i))));
+    
+    Diff_wagering_or_controll_wagering_post  =  wagering_or_controll_wagering_post(find(Diff_completedTrials == y(i)));
+    Diff_completedTrials_success             =  success(find(Diff_completedTrials == y(i)) );
+    Diff_selected_Left                    =  selected_Left(find(Diff_completedTrials == y(i)) );
+    Diff_wager_choosen_post               =  wager_choosen_post(find(Diff_completedTrials == y(i)) );
+    Diff_selected_Right                   =  selected_Right(find(Diff_completedTrials == y(i)) );
+ 
+    
+out = metaD_PerSubject(n_wagers, Diff_wagering_or_controll_wagering_post, Diff_completedTrials_success,Diff_selected_Left, Diff_wager_choosen_post,Diff_selected_Right);
+if out.da ==Inf || out.da == -Inf 
+Diff(file_index).d(i)               =  NaN; 
+Diff(file_index).metaD(i)          = NaN;  
+Diff(file_index).metaEfficiency(i)   = NaN; 
+Diff(file_index).metaEfficiency_Difference(i) = NaN; 
+Diff(file_index).meta_c1(i)          =  NaN;  
+Diff(file_index).c_1(i)              =  NaN;  
+else
+Diff(file_index).d(i)                   = out.da;
+Diff(file_index).metaD(i)               = out.meta_da;
+Diff(file_index).metaEfficiency(i)      = out.M_ratio;
+Diff(file_index).metaEfficiency_Difference(i) = out.M_diff;
+Diff(file_index).meta_c1(i)                 =  out.type2_fit.meta_c1;   
+Diff(file_index).c_1(i)                     =  out.c_1; 
+end
+    %unique(refAngle_Sample(find(Diff_completedTrials == y(i)))) ;
+    %unique(refAngle_M2S(find(Diff_completedTrials == y(i)))) ;
+
+    %[refAngle_Sample(find(Diff_completedTrials == y(i))); refAngle_M2S(find(Diff_completedTrials == y(i)))];
+    
+end
+
+%% Sample
+Samples = unique(refAngle_Sample(unsuccess == 0));
+CompletedTrials = refAngle_Sample; 
+CompletedTrials(unsuccess ~= 0) = NaN;
+
+for i = 1: length(Samples)
+    Sample(file_index).Subject         = subfolder_content{file_index}(1:6); 
+    Sample(file_index).Samples(i)   = Samples(i); 
+    Sample(file_index).NrTrial(i)      = nansum(CompletedTrials == Samples(i)); 
+    Sample(file_index).Success(i)      = nansum(success(find(CompletedTrials == Samples(i))) == 1) ; 
+    Sample(file_index).Unsuccess(i)    = nansum(success(find(CompletedTrials == Samples(i))) == 0) ; 
+    Sample(file_index).Performance(i)  = Sample(file_index).Success(i)/ (Sample(file_index).Success(i) +Sample(file_index).Unsuccess(i)) ; 
+    Sample(file_index).RT_mean(i)      = nanmean(Time_match_to_sample_ReactionTime(find(CompletedTrials == Samples(i)))); 
+    Sample(file_index).RT_sd(i)        = nanstd(Time_match_to_sample_ReactionTime(find(CompletedTrials == Samples(i))));     
+    Sample(file_index).MVT_mean(i)     = nanmean(Time_match_to_sample_MovementTime(find(CompletedTrials == Samples(i)))); 
+    Sample(file_index).MVT_sd(i)       = nanstd(Time_match_to_sample_MovementTime(find(CompletedTrials == Samples(i))));
+end
+
+%% Samples per Difficulty Level
+Diff_completedTrials = diff;
+Diff_completedTrials(unsuccess ~= 0) = NaN;
+Dif= unique(Diff_completedTrials(unsuccess == 0));
+for i_diff = 1: length(Dif)
+    Diff_Ind = find(Diff_completedTrials == Dif(i_diff));
+    Samples = unique(refAngle_Sample(Diff_Ind));
+    CompletedTrials = refAngle_Sample(Diff_Ind);
+for i = 1: length(Samples)
+    Diff_Sample(i_diff).Subject         = subfolder_content{file_index}(1:6); 
+    Diff_Sample(i_diff).Samples(i)   = Samples(i); 
+    Diff_Sample(i_diff).NrTrial(i)      = nansum(CompletedTrials == Samples(i)); 
+    Diff_Sample(i_diff).Success(i)      = nansum(success(find(CompletedTrials == Samples(i))) == 1) ; 
+    Diff_Sample(i_diff).Unsuccess(i)    = nansum(success(find(CompletedTrials == Samples(i))) == 0) ; 
+    Diff_Sample(i_diff).Performance(i)  = Diff_Sample(i_diff).Success(i)/ (Diff_Sample(i_diff).Success(i) +Diff_Sample(i_diff).Unsuccess(i)) ; 
+    Diff_Sample(i_diff).RT_mean(i)      = nanmean(Time_match_to_sample_ReactionTime(find(CompletedTrials == Samples(i)))); 
+    Diff_Sample(i_diff).RT_sd(i)        = nanstd(Time_match_to_sample_ReactionTime(find(CompletedTrials == Samples(i))));     
+    Diff_Sample(i_diff).MVT_mean(i)     = nanmean(Time_match_to_sample_MovementTime(find(CompletedTrials == Samples(i)))); 
+    Diff_Sample(i_diff).MVT_sd(i)       = nanstd(Time_match_to_sample_MovementTime(find(CompletedTrials == Samples(i))));
+end
+end
+
+%% Post-Wagering
+Cer = 1:6 ;% unique(wager_choosen_post(unsuccess == 0));
+CompletedTrials = wager_choosen_post; 
+CompletedTrials(unsuccess ~= 0) = NaN;
+CompletedTrials(wagering_or_controll_wagering_post == 1) = NaN; %delete all Pre-Wagering
+
+for i = 1: length(Cer)
+    PostCertain(file_index).Subject         = subfolder_content{file_index}(1:6); 
+    PostCertain(file_index).CertaintyLevels(i)   = Cer(i); 
+    PostCertain(file_index).NrTrial(i)      = sum(CompletedTrials == Cer(i)); 
+    PostCertain(file_index).NrTrials_Suc(i)      = sum(success(find(CompletedTrials == Cer(i))) == 1) ; 
+    PostCertain(file_index).NrTrials_Unsuc(i)    = sum(success(find(CompletedTrials == Cer(i))) == 0) ; 
+    PostCertain(file_index).Performance(i)       = PostCertain(file_index).NrTrials_Suc(i)/ (PostCertain(file_index).NrTrials_Suc(i) +PostCertain(file_index).NrTrials_Unsuc(i)) ; 
+    PostCertain(file_index).GeneralPerformance   = sum(PostCertain(file_index).NrTrials_Suc) /  sum(PostCertain(file_index).NrTrial);
+
+end
+
+PostCertain(file_index).PercSuc = PostCertain(file_index).NrTrials_Suc / sum(PostCertain(file_index).NrTrials_Suc)*100;
+PostCertain(file_index).PercUnsuc = PostCertain(file_index).NrTrials_Unsuc / sum(PostCertain(file_index).NrTrials_Unsuc)*100;
+PostCertain(file_index).PercAll = PostCertain(file_index).NrTrial / sum(PostCertain(file_index).NrTrial)*100;
+
+%%
+Cer = 1:6 ;% unique(wager_choosen_post(unsuccess == 0));
+CompletedTrials = wager_choosen_post; 
+CompletedTrials(unsuccess ~= 0) = NaN;
+CompletedTrials(wagering_or_controll_wagering_post == 1) = NaN; %delete all Pre-Wagering
+Dif= unique(Diff_completedTrials(unsuccess == 0));
+for i_diff = 1: length(Dif)
+    Diff_Ind = find(Diff_completedTrials == Dif(i_diff));
+    Diff_Cer_CompletedTrials = CompletedTrials(Diff_Ind);
+    for i = 1: length(Cer)
+    DiffPostCertain(file_index).Diff(i_diff).Subject         = subfolder_content{file_index}(1:6); 
+    DiffPostCertain(file_index).Diff(i_diff).CertaintyLevels(i)   = Cer(i); 
+    DiffPostCertain(file_index).Diff(i_diff).NrTrial(i)      = sum(Diff_Cer_CompletedTrials == Cer(i)); 
+    DiffPostCertain(file_index).Diff(i_diff).NrTrials_Suc(i)      = sum(success(find(Diff_Cer_CompletedTrials == Cer(i))) == 1) ; 
+    DiffPostCertain(file_index).Diff(i_diff).NrTrials_Unsuc(i)    = sum(success(find(Diff_Cer_CompletedTrials == Cer(i))) == 0) ; 
+    DiffPostCertain(file_index).Diff(i_diff).Performance(i)       = DiffPostCertain(file_index).Diff(i_diff).NrTrials_Suc(i)/ (DiffPostCertain(file_index).Diff(i_diff).NrTrials_Suc(i) + DiffPostCertain(file_index).Diff(i_diff).NrTrials_Unsuc(i)) ; 
+    DiffPostCertain(file_index).Diff(i_diff).GeneralPerformance   = sum(DiffPostCertain(file_index).Diff(i_diff).NrTrials_Suc) /  sum(DiffPostCertain(file_index).Diff(i_diff).NrTrial);
+
+    end
+end
+
+
+%%
+
+Cer = 1:6 ;%unique(wager_choosen_pre(unsuccess == 0));
+CompletedTrials = wager_choosen_pre; 
+CompletedTrials(unsuccess ~= 0) = NaN;
+CompletedTrials(wagering_or_controll_wagering_post == 2) = NaN;
+
+for i = 1: length(Cer)
+    PreCertain(file_index).Subject         = subfolder_content{file_index}(1:6); 
+    PreCertain(file_index).CertaintyLevels(i)   = Cer(i); 
+    PreCertain(file_index).NrTrial(i)      = sum(CompletedTrials == Cer(i)); 
+    PreCertain(file_index).NrTrials_Suc(i)      = sum(success(find(CompletedTrials == Cer(i))) == 1) ; 
+    PreCertain(file_index).NrTrials_Unsuc(i)    = sum(success(find(CompletedTrials == Cer(i))) == 0) ; 
+    PreCertain(file_index).Performance(i)  = PreCertain(file_index).NrTrials_Suc(i)/ (PreCertain(file_index).NrTrials_Suc(i) +PreCertain(file_index).NrTrials_Unsuc(i)) ; 
+    PreCertain(file_index).GeneralPerformance = sum(PreCertain(file_index).NrTrials_Suc) /  sum(PreCertain(file_index).NrTrial);
+end
+
+PreCertain(file_index).PercSuc = PreCertain(file_index).NrTrials_Suc ./ sum(PreCertain(file_index).NrTrials_Suc)*100;
+PreCertain(file_index).PercUnsuc = PreCertain(file_index).NrTrials_Unsuc / sum(PreCertain(file_index).NrTrials_Unsuc)*100;
+PreCertain(file_index).PercAll = PreCertain(file_index).NrTrial / sum(PreCertain(file_index).NrTrial)*100;
+
+
+out = metaD_PerSubject(n_wagers, wagering_or_controll_wagering_post, completedTrials_success,selected_Left, wager_choosen_post,selected_Right);
+General(file_index).d       = out.da;
+General(file_index).metaD   = out.meta_da;
+General(file_index).metaEfficiency = out.M_ratio;
+General(file_index).metaEfficiency_Difference = out.M_diff;
+General(file_index).meta_c1     =  out.type2_fit.meta_c1; 
+General(file_index).c_1         =  out.c_1; 
+
+%% SLOPE-BASED METACOGNITION
+% linear fit of all correct trials as function of Wagers of one subject
+        SlopeBasedMetacognition(file_index).p_conf_post      = polyfit(1:n_wagers,PostCertain(file_index).PercSuc,1);
+		SlopeBasedMetacognition(file_index).r_conf_post      = SlopeBasedMetacognition(file_index).p_conf_post(1) .* [1:n_wagers] + SlopeBasedMetacognition(file_index).p_conf_post(2);
+		SlopeBasedMetacognition(file_index).p_err_post       = polyfit(1:n_wagers,PostCertain(file_index).PercUnsuc,1);
+		SlopeBasedMetacognition(file_index).r_err_post       = SlopeBasedMetacognition(file_index).p_err_post(1) .* [1:n_wagers] + SlopeBasedMetacognition(file_index).p_err_post(2);
+		
+        SlopeBasedMetacognition(file_index).p_conf_pre       = polyfit(1:n_wagers,PreCertain(file_index).PercSuc,1);
+		SlopeBasedMetacognition(file_index).r_conf_pre       = SlopeBasedMetacognition(file_index).p_conf_pre(1) .* [1:n_wagers] + SlopeBasedMetacognition(file_index).p_conf_pre(2);
+		SlopeBasedMetacognition(file_index).p_err_pre        = polyfit(1:n_wagers,PreCertain(file_index).PercUnsuc,1);
+		SlopeBasedMetacognition(file_index).r_err_pre        = SlopeBasedMetacognition(file_index).p_err_pre(1) .* [1:n_wagers] + SlopeBasedMetacognition(file_index).p_err_pre(2);
+        SlopeBasedMetacognition(file_index).r_conf_corrected = SlopeBasedMetacognition(file_index).r_conf_post(:) - SlopeBasedMetacognition(file_index).r_conf_pre(:);
+		SlopeBasedMetacognition(file_index).r_err_corrected  = SlopeBasedMetacognition(file_index).r_err_post(:)  - SlopeBasedMetacognition(file_index).r_err_pre(:);
+		
+		SlopeBasedMetacognition(file_index).meta_conf_post          = SlopeBasedMetacognition(file_index).p_conf_post(1) - SlopeBasedMetacognition(file_index).p_conf_pre(1);
+		SlopeBasedMetacognition(file_index).meta_err_post           = -SlopeBasedMetacognition(file_index).p_err_post(1) + SlopeBasedMetacognition(file_index).p_err_pre(1);
+		SlopeBasedMetacognition(file_index).meta_conf_pre      = SlopeBasedMetacognition(file_index).p_conf_post(1) - SlopeBasedMetacognition(file_index).p_conf_pre(1);
+		SlopeBasedMetacognition(file_index).meta_err_pre       = -SlopeBasedMetacognition(file_index).p_err_post(1) + SlopeBasedMetacognition(file_index).p_err_pre(1);
+		General(file_index).meta_slope               = SlopeBasedMetacognition(file_index).meta_conf_post(:) + SlopeBasedMetacognition(file_index).meta_err_post(:);
+        SlopeBasedMetacognition(file_index).meta_slope               = SlopeBasedMetacognition(file_index).meta_conf_post(:) + SlopeBasedMetacognition(file_index).meta_err_post(:);
+
+        SlopeBasedMetacognition(file_index).meta_pre           = SlopeBasedMetacognition(file_index).meta_conf_pre + SlopeBasedMetacognition(file_index).meta_err_pre;
+        
+%%
+end
+
+
+%% save the Datasets
+save(['Y:\Projects\Interoception\Perceptual_Certainty\Results\DiscriminationPerformance_Certainty' filesep 'Dataset_PerceptualCertainty_' date,'.mat'],'General','Diff','Sample','DiffPostCertain','Diff_Sample','PostCertain','PreCertain','SlopeBasedMetacognition');
+%% create Tables to combine Data from all participants
+%%% Create Table from GeneralStructure
+TableGeneral = struct2table(General);
+path_save = 'C:\Users\kkaduk\Dropbox\promotion\Projects\Metacogition_Interoception_Human\M2S_Certainty\Data\TableEachRowParticipant\';
+save([path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow' ],'TableGeneral');
+writetable(TableGeneral, [path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow'], 'Delimiter', ' ')
+
+TableDiff = struct2table(Diff);
+% t = array2table(TableDiff.Performance); array2table(TableDiff.DiffLevels)]
+% t.Properties.VariableNames = {'A', '2', '4', '8','12'};
+% t(:,1)
+% 
+% ; repmat(TableDiff.Subject,2,size(TableDiff.DiffLevels,2))])
+% 
+% [U,is] = stack(TableDiff.NrTrial,TableDiff.DiffLevels)
+writetable(TableDiff, [path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow_EachDifficultyLevel'], 'Delimiter', ' ')
+
+
+% 
+% % ideas how to use other options as a for-loop
+% groupedDifficulty = arrayfun(@(y)find(x == 0), unique(x), 'UniformOutput',false);
+% Rotation_Sample = cell2mat(arrayfun(@(data) vertcat(data.hnd.cue(1).shape.rotation),data,'uni',0));
+% diff(groupedDifficulty{1})
+% 
+% diff(success == 1)/ diff(success == 0);
+% for i = 1: length(y)
+%     groupedDifficulty(i) = sum(x == y(6)); 
+% end
