@@ -29,7 +29,8 @@ ylabel('perceptual performance (%)','fontsize',WritingLabelAxis_Size,'fontweight
 xlabel('degree of rotation (difficult to easy)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 title('performance per difficulty level','fontsize',14,'fontweight','b' );
 Subject{c} = Diff(file_index).Subject; 
-legend(Subject);hold on
+%legend(Subject);
+hold on
 % add the mean of all participants
 %plot( Diff(file_index).DiffLevels), [Diff(:).Performance](1), 'k.-', ,'MarkerSize',35) 
 
@@ -52,7 +53,8 @@ set(gca,'XTick', Diff(file_index).DiffLevels);set(gca,'xlim',[0 14]);
 ylabel('reaction time  (s)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 xlabel('degree of rotation (similar,difficult to easy)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 title('reaction time per difficulty level','fontsize',14,'fontweight','b' );
-legend(Subject);hold on
+%legend(Subject);
+hold on
 
 
 subplot(1,2,2);
@@ -63,7 +65,8 @@ set(gca,'XTick', Diff(file_index).DiffLevels);set(gca,'xlim',[0 14]);
 ylabel('movement time (s)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 xlabel('degree of rotation (similar,difficult to easy)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 title('movement time per difficulty level','fontsize',14,'fontweight','b' );
-legend(Subject); hold on
+%legend(Subject); 
+hold on
 
 figure(3); set(gcf,'Name','performance per Sample');
 subplot(2,1,1);
@@ -74,7 +77,8 @@ ylabel('perceptual performance (%)','fontsize',WritingLabelAxis_Size,'fontweight
 xlabel('rotation of the Sample','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 title('performance per Sample presentd during M2S','fontsize',24,'fontweight','b' );
 Subject{c} = Diff(file_index).Subject; 
-legend(Subject);hold on
+%legend(Subject);
+hold on
 
 subplot(2,1,2);
 plot(  Sample(file_index).Samples, Sample(file_index).NrTrial, '.','color',cmap(file_index,:), 'MarkerSize',25)  
@@ -92,7 +96,10 @@ set(gca,'XTick', 0:1:5);set(gca,'xlim',[0 5]);
 ylabel('averageCertaintyRating (Post)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 xlabel('perceptual Performance (dprime)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 Subject{c} = Diff(file_index).Subject; 
-legend(Subject);hold on
+text(General(file_index).d+0.05, General(file_index).AverageCertainty,Diff(file_index).Subject)
+
+%legend(Subject);
+hold on
 
 
 
@@ -104,7 +111,10 @@ set(gca,'XTick', 0:0.1:1);set(gca,'xlim',[0 1]);
 ylabel('averagePerformance Pre-Certainty','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 xlabel('averagePerformance Post-Certainty ','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 Subject{c} = Diff(file_index).Subject; 
-legend(Subject);hold on
+text(PostCertain(file_index).GeneralPerformance+0.05, PreCertain(file_index).GeneralPerformance,Diff(file_index).Subject)
+
+%legend(Subject);
+hold on
 
 figure(6); set(gcf,'Name','performance per Certainty Level (Post)');
 subplot(1,2,1);
@@ -154,7 +164,9 @@ ylabel('Performance (%)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 xlabel('d (Type 1)','fontsize',WritingLabelAxis_Size,'fontweight','b' );
 title('','fontsize',14,'fontweight','b' );
 Subject{c} = Diff(file_index).Subject; 
-legend(Subject);hold on
+%legend(Subject);
+hold on
+text(General(file_index).d+0.05, General(file_index).Performance,Diff(file_index).Subject)
 
 
 figure(9);  set(gcf,'Name','dprime  vs metaD');% Meta-D as function of D-prime
@@ -285,16 +297,20 @@ c = c +1;
 Diff_Sample = []; 
 end
 % save mat-figures to file
-path_SaveFig = ['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results\']; 
-path_SaveFig = ['Y:\Personal\Kristin\Talks\ScienceMeeting_Okt2018\Figures\']; 
+path_SaveFig = ['C:\Users\kkaduk\Desktop\Kristin\Projects\Metacognition_Interoception_Human\Perceptual_Certainty\Results']; 
+path_SaveFig = ['Y:\Personal\Kristin\Talks\ScienceMeeting_Okt2018\Figures']; 
 
 for i = 1:12
-    h(i) = figure(i); 
-end  
-savefig(h, [path_SaveFig  'Graphs_PerceptualCertainty_102108.fig'])
-save([path_SaveFig  'Graphs_PerceptualCertainty_102108'], 'png')
+    h = [];
+    h(1) = figure(i); 
+    print(h,[path_SaveFig filesep 'Graphs_PerceptualCertainty_',num2str(i)], '-dpng')
 
-print(h,[path_SaveFig  'Graphs_PerceptualCertainty_102108'], '-dpng')
+end  
+
+for i = 1:12
+        h(i) = figure(i); 
+end
+savefig(h, [path_SaveFig filesep 'Graphs_PerceptualCertainty_102108.fig'])
 
 %% create Tables to combine Data from all participants
 %%% Create Table from GeneralStructure

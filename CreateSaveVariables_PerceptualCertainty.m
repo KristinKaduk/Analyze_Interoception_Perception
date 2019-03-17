@@ -261,11 +261,15 @@ save(['Y:\Projects\Interoception\Perceptual_Certainty\Results\DiscriminationPerf
 %% create Tables to combine Data from all participants
 %%% Create Table from GeneralStructure
 TableGeneral = struct2table(General);
-path_save = 'C:\Users\kkaduk\Dropbox\promotion\Projects\Metacogition_Interoception_Human\M2S_Certainty\Data\TableEachRowParticipant\';
+path_save = 'C:\Users\kkaduk\Dropbox\promotion\Projects\Metacogition_Interoception_Human\M2S_Certainty\Data\';
 save([path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow' ],'TableGeneral');
 writetable(TableGeneral, [path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow'], 'Delimiter', ' ')
 
 TableDiff = struct2table(Diff);
+TablPostCertain = struct2table(PostCertain);
+TableSlopeBasedMetacognition = struct2table(SlopeBasedMetacognition);
+
+
 % t = array2table(TableDiff.Performance); array2table(TableDiff.DiffLevels)]
 % t.Properties.VariableNames = {'A', '2', '4', '8','12'};
 % t(:,1)
@@ -273,7 +277,11 @@ TableDiff = struct2table(Diff);
 % ; repmat(TableDiff.Subject,2,size(TableDiff.DiffLevels,2))])
 % 
 % [U,is] = stack(TableDiff.NrTrial,TableDiff.DiffLevels)
+
+TablPostCertain.GeneralPerformance =  [] ; 
 writetable(TableDiff, [path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow_EachDifficultyLevel'], 'Delimiter', ' ')
+writetable(TablPostCertain, [path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow_EachCertaintyLevel'], 'Delimiter', ' ')
+writetable(TableSlopeBasedMetacognition, [path_save, 'Table_PercDiscTask_CertaintyScale_EachParticipantOneRow_SlopeBasedMeasurements'], 'Delimiter', ' ')
 
 
 % 
