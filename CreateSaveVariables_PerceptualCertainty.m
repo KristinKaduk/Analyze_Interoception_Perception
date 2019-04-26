@@ -1,3 +1,5 @@
+function CreateSaveVariables_PerceptualCertainty
+
 clear all; close all; 
 c = 1; Subject = {}; 
 pathname = 'Y:\Projects\Interoception\Perceptual_Certainty\Data\behavior'; 
@@ -17,31 +19,29 @@ unsuccess              =[trial.unsuccess];
 refAngle_Sample        =[trial.refAngle_Sample];
 refAngle_M2S           =[trial.refAngle_M2S];
 Stimuli_LeftOrRight    =[trial.Stimuli_LeftOrRight];
+
+if strcmp( subfolder_content{file_index}, 'CHST092_2019-02-05_01.mat')
+selected_Right         =[trial.selected_Left]; 
+selected_Left          =[trial.selected_Right ]; %%selected coded as 1
+else
 selected_Right         =[trial.selected_Right]; %selected coded as 1
 selected_Left          =[trial.selected_Left]; %%selected coded as 1
+end
+
 Time_matchtosample_appeared_run                     = [trial.Time_matchtosample_appeared_run];
 Time_match_to_sample_button_released_run            = [trial.Time_match_to_sample_button_released_run];
 Time_match_to_sample_selected_1stPress_run          = [trial.Time_match_to_sample_selected_1stPress_run];
 Time_match_to_sample_selected_run                   = [trial.Time_match_to_sample_selected_run];
-Time_match_to_sample_ReactionTime = Time_match_to_sample_button_released_run - Time_matchtosample_appeared_run;
-Time_match_to_sample_MovementTime = Time_match_to_sample_selected_run - Time_matchtosample_appeared_run;
-position_wager_chosen_pre   =[trial.position_wager_chosen_pre];
-position_wager_chosen_post  =[trial.position_wager_chosen_post];
-wager_choosen_pre           =[trial.wager_choosen_pre];
-wager_choosen_post          =[trial.wager_choosen_post];
-wagering_or_controll_wagering_post   =[trial.wagering_or_controll_wagering_post]; %postwagering =2
-wagering_or_controll_wagering_pre    =[trial.wagering_or_controll_wagering_pre];%
+Time_match_to_sample_ReactionTime                   = Time_match_to_sample_button_released_run - Time_matchtosample_appeared_run;
+Time_match_to_sample_MovementTime                   = Time_match_to_sample_selected_run - Time_matchtosample_appeared_run;
+position_wager_chosen_pre                           = [trial.position_wager_chosen_pre];
+position_wager_chosen_post                          = [trial.position_wager_chosen_post];
+wager_choosen_pre                                   = [trial.wager_choosen_pre];
+wager_choosen_post                                  = [trial.wager_choosen_post];
+wagering_or_controll_wagering_post                  = [trial.wagering_or_controll_wagering_post]; %postwagering =2
+wagering_or_controll_wagering_pre                   = [trial.wagering_or_controll_wagering_pre];%
+n_wagers                                            =SETTINGS.NrOfWagers;
 
-n_wagers        =SETTINGS.NrOfWagers;
-n_trials        =SETTINGS.n_trials;
-control_post    =[trial.wagering_or_controll_wagering_post];
-control_pre     =[trial.wagering_or_controll_wagering_pre];
-selected_Right  =[trial.selected_Right];
-Stimuli_LeftOrRight     =[trial.Stimuli_LeftOrRight];
-selected_Left           =[trial.selected_Left];
-wager_choosen_post      =[trial.wager_choosen_post];
-wager_choosen_pre       =[trial.wager_choosen_pre];
-correctSelection_M2S    =[trial.correctSelection_M2S];
 
 success = zeros(1,length(Time_match_to_sample_MovementTime)); 
 success((Stimuli_LeftOrRight == 2 & selected_Right == 1 | Stimuli_LeftOrRight == 1 & selected_Left == 1)) = 1; 
@@ -85,15 +85,39 @@ for i = 1: length(y)
     Diff(file_index).RT_sd(i)        = nanstd(Time_match_to_sample_ReactionTime(find(Diff_completedTrials == y(i))));     
     Diff(file_index).MVT_mean(i)     = nanmean(Time_match_to_sample_MovementTime(find(Diff_completedTrials == y(i)))); 
     Diff(file_index).MVT_sd(i)       = nanstd(Time_match_to_sample_MovementTime(find(Diff_completedTrials == y(i))));
+
     
+    
+    
+ Diff_stimID = [];  Diff_response = [];   rating = [];out = []; 
     Diff_wagering_or_controll_wagering_post  =  wagering_or_controll_wagering_post(find(Diff_completedTrials == y(i)));
+    Diff_wagering_or_controll_wagering_pre  =  wagering_or_controll_wagering_pre(find(Diff_completedTrials == y(i)));
+
     Diff_completedTrials_success             =  success(find(Diff_completedTrials == y(i)) );
     Diff_selected_Left                    =  selected_Left(find(Diff_completedTrials == y(i)) );
     Diff_wager_choosen_post               =  wager_choosen_post(find(Diff_completedTrials == y(i)) );
     Diff_selected_Right                   =  selected_Right(find(Diff_completedTrials == y(i)) );
- 
-    
-out = metaD_PerSubject(n_wagers, Diff_wagering_or_controll_wagering_post, Diff_completedTrials_success,Diff_selected_Left, Diff_wager_choosen_post,Diff_selected_Right);
+    Diff_stimID = Stimuli_LeftOrRight(find(Diff_completedTrials == y(i) ));
+%Meta-D for each difficulty level
+Diff_stimID(Diff_stimID == 1) = 0; 
+Diff_stimID(Diff_stimID == 2) = 1; 
+Diff_stimID(Diff_wagering_or_controll_wagering_pre == 1) = NaN;
+
+Diff_rating = Diff_wager_choosen_post; 
+
+Diff_response = Diff_selected_Left;
+Diff_response(Diff_response == 1) = 0; 
+
+Diff_response(Diff_selected_Right == 1) = 1;
+Diff_response(Diff_wagering_or_controll_wagering_pre == 1) = NaN;
+
+rating_scale = [1 2 3 4 5 6];
+nRatings	= length(rating_scale);
+
+[nR_S1, nR_S2] = trials2counts(Diff_stimID, Diff_response, Diff_rating, nRatings,0,0);
+
+out = type2_SDT_SSE(nR_S1, nR_S2);
+
 if out.da ==Inf || out.da == -Inf 
 Diff(file_index).d(i)               =  NaN; 
 Diff(file_index).metaD(i)          = NaN;  
@@ -163,19 +187,31 @@ CompletedTrials(unsuccess ~= 0) = NaN;
 CompletedTrials(wagering_or_controll_wagering_post == 1) = NaN; %delete all Pre-Wagering
 
 for i = 1: length(Cer)
-    PostCertain(file_index).Subject         = subfolder_content{file_index}(1:6); 
+    PostCertain(file_index).Subject              = subfolder_content{file_index}(1:6); 
     PostCertain(file_index).CertaintyLevels(i)   = Cer(i); 
-    PostCertain(file_index).NrTrial(i)      = sum(CompletedTrials == Cer(i)); 
+    PostCertain(file_index).NrTrial(i)           = sum(CompletedTrials == Cer(i)); 
     PostCertain(file_index).NrTrials_Suc(i)      = sum(success(find(CompletedTrials == Cer(i))) == 1) ; 
+    PostCertain(file_index).NrTrials_Suc_Left(i) = sum(success(find(CompletedTrials == Cer(i)& selected_Left == 1)) == 1) ; 
+    PostCertain(file_index).NrTrials_Suc_Right(i)= sum(success(find(CompletedTrials == Cer(i)& selected_Right == 1)) == 1) ; 
     PostCertain(file_index).NrTrials_Unsuc(i)    = sum(success(find(CompletedTrials == Cer(i))) == 0) ; 
+    PostCertain(file_index).NrTrials_Unsuc_Left(i) = sum(success(find(CompletedTrials == Cer(i)& selected_Left == 1)) == 0) ; 
+    PostCertain(file_index).NrTrials_Unsuc_Right(i)= sum(success(find(CompletedTrials == Cer(i)& selected_Right == 1)) == 0) ; 
+
     PostCertain(file_index).Performance(i)       = PostCertain(file_index).NrTrials_Suc(i)/ (PostCertain(file_index).NrTrials_Suc(i) +PostCertain(file_index).NrTrials_Unsuc(i)) ; 
     PostCertain(file_index).GeneralPerformance   = sum(PostCertain(file_index).NrTrials_Suc) /  sum(PostCertain(file_index).NrTrial);
 
 end
 
-PostCertain(file_index).PercSuc = PostCertain(file_index).NrTrials_Suc / sum(PostCertain(file_index).NrTrials_Suc)*100;
-PostCertain(file_index).PercUnsuc = PostCertain(file_index).NrTrials_Unsuc / sum(PostCertain(file_index).NrTrials_Unsuc)*100;
-PostCertain(file_index).PercAll = PostCertain(file_index).NrTrial / sum(PostCertain(file_index).NrTrial)*100;
+PostCertain(file_index).PercSuc         = round(PostCertain(file_index).NrTrials_Suc / sum(PostCertain(file_index).NrTrials_Suc), 2);
+PostCertain(file_index).PercSuc_Left    = round(PostCertain(file_index).NrTrials_Suc_Left / sum(PostCertain(file_index).NrTrials_Suc_Left),2);
+PostCertain(file_index).PercSuc_Right = round(PostCertain(file_index).NrTrials_Suc_Right / sum(PostCertain(file_index).NrTrials_Suc_Right),2);
+
+PostCertain(file_index).PercUnsuc = round(PostCertain(file_index).NrTrials_Unsuc / sum(PostCertain(file_index).NrTrials_Unsuc),2);
+PostCertain(file_index).PercUnsuc_Left = round(PostCertain(file_index).NrTrials_Unsuc_Left / sum(PostCertain(file_index).NrTrials_Unsuc_Left),2);
+PostCertain(file_index).PercUnsuc_Right = round(PostCertain(file_index).NrTrials_Unsuc_Right / sum(PostCertain(file_index).NrTrials_Unsuc_Right),2);
+
+PostCertain(file_index).PercAll = round(PostCertain(file_index).NrTrial / sum(PostCertain(file_index).NrTrial),2);
+
 
 %%
 Cer = 1:6 ;% unique(wager_choosen_post(unsuccess == 0));
@@ -220,14 +256,46 @@ PreCertain(file_index).PercSuc = PreCertain(file_index).NrTrials_Suc ./ sum(PreC
 PreCertain(file_index).PercUnsuc = PreCertain(file_index).NrTrials_Unsuc / sum(PreCertain(file_index).NrTrials_Unsuc)*100;
 PreCertain(file_index).PercAll = PreCertain(file_index).NrTrial / sum(PreCertain(file_index).NrTrial)*100;
 
+%% META-D
+stimID = Stimuli_LeftOrRight;
+stimID(stimID == 1) = 0; 
+stimID(stimID == 2) = 1; 
 
-out = metaD_PerSubject(n_wagers, wagering_or_controll_wagering_post, completedTrials_success,selected_Left, wager_choosen_post,selected_Right);
+stimID(wagering_or_controll_wagering_pre == 1) = NaN;
+stimID(unsuccess ~= 0) = NaN;
+
+wager_choosen_post(wagering_or_controll_wagering_pre == 1) = NaN;
+wager_choosen_post(unsuccess ~= 0) = NaN;
+rating = wager_choosen_post; 
+
+response = selected_Left;
+response(response == 1) = 0; 
+
+response(selected_Right == 1) = 1;
+response(wagering_or_controll_wagering_pre == 1) = NaN;
+response(unsuccess ~= 0) = NaN;
+
+rating_scale = [1 2 3 4 5 6];
+nRatings	= length(rating_scale);
+
+[nR_S1, nR_S2] = trials2counts(stimID, response, rating, nRatings,0,0);
+out = type2_SDT_SSE(nR_S1, nR_S2);
+
 General(file_index).d       = out.da;
 General(file_index).metaD   = out.meta_da;
 General(file_index).metaEfficiency = out.M_ratio;
 General(file_index).metaEfficiency_Difference = out.M_diff;
 General(file_index).meta_c1     =  out.type2_fit.meta_c1; 
 General(file_index).c_1         =  out.c_1; 
+
+%% ROC-Curve
+figure
+
+[X_FPR,Y_TPR,T,AUC] = perfcurve(stimID==response,rating,true);
+plot(X_FPR,Y_TPR);
+xlabel('False positive rate'); ylabel('True positive rate')
+title(sprintf('ROC by perfcurve, AUC %.2f',AUC));
+General(file_index).AUC         =  AUC; 
 
 %% SLOPE-BASED METACOGNITION
 % linear fit of all correct trials as function of Wagers of one subject
